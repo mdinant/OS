@@ -7,7 +7,9 @@
 #include <multiboot.h>
 
 
-
+void apic_irq48_handler(struct regs *r) {
+	printf("got a call from other processor :)\n");
+}
 
 void _main(multiboot_info_t *mbt, unsigned long magic)
 {
@@ -21,6 +23,8 @@ void _main(multiboot_info_t *mbt, unsigned long magic)
 	init_mouse();
 	keyboard_install();
 	
+	irq_install_handler(16, apic_irq48_handler);
+
 	__asm__ __volatile__ ("sti");
 
 //	unsigned int p = (int)&_ap_start;

@@ -41,6 +41,7 @@ SECTIONS
 	 	cpudet.o(.text) 
 	 	cpu.o(.text) 
 	 	smp.o(.text) 
+	 	apic.o(.text)
 	 	acpi.o(.text)
         _boot_end = .;
         . = ALIGN(4096);

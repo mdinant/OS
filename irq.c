@@ -5,6 +5,8 @@
 *  Notes: No warranty expressed or implied. Use at own risk. */
 #include <system.h>
 
+#include "apic.h"
+
 /* These are own ISRs that point to our special IRQ handler
 *  instead of the regular 'fault_handler' function */
 extern void irq0();
@@ -24,12 +26,15 @@ extern void irq13();
 extern void irq14();
 extern void irq15();
 
+extern void irq48();
+
+
 /* This array is actually an array of function pointers. We use
 *  this to handle custom IRQ handlers for a given IRQ */
-void *irq_routines[16] =
+void *irq_routines[17] =
 {
     0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0
+    0, 0, 0, 0, 0, 0, 0, 0, 0
 };
 
 /* This installs a custom IRQ handler for the given IRQ */
@@ -90,6 +95,12 @@ void irq_install()
     idt_set_gate(45, (unsigned)irq13, 0x08, 0x8E);
     idt_set_gate(46, (unsigned)irq14, 0x08, 0x8E);
     idt_set_gate(47, (unsigned)irq15, 0x08, 0x8E);
+
+
+    /**
+     * APIC
+     */
+    idt_set_gate(48, (unsigned)irq48, 0x08, 0x8E);
 }
 
 /* Each of the IRQ ISRs point to this function, rather than
@@ -102,8 +113,14 @@ void irq_install()
 *  interrupt at BOTH controllers, otherwise, you only send
 *  an EOI command to the first controller. If you don't send
 *  an EOI, you won't raise any more IRQs */
-void irq_handler(struct regs *r)
+void pic_irq_handler(struct regs *r)
 {
+	// check spurious
+	if ((r->int_no - 32) == 7) {
+
+	}
+
+
     /* This is a blank function pointer */
     void (*handler)(struct regs *r);
 
@@ -126,4 +143,20 @@ void irq_handler(struct regs *r)
     /* In either case, we need to send an EOI to the master
     *  interrupt controller too */
     outportb(0x20, 0x20);
+}
+
+void apic_irq_handler(struct regs *r)
+{
+    /* This is a blank function pointer */
+    void (*handler)(struct regs *r);
+
+    handler = irq_routines[r->int_no - 32];
+    if (handler)
+    {
+        handler(r);
+    }
+
+
+
+    apic_write(EOI_REGISTER, 0x0);
 }

@@ -333,6 +333,7 @@ global irq12
 global irq13
 global irq14
 global irq15
+global irq48
 
 ; 32: IRQ0
 irq0:
@@ -386,6 +387,13 @@ irq6:
 ; 39: IRQ7
 irq7:
     cli
+; check spurious
+	mov al, 0x0B
+	out 0x20, al
+	in al, 0x20           ;al = master PIC's "In Service Register"
+	test eax, 1<<7
+	jz spurious
+
     push byte 0
     push byte 39
     jmp irq_common_stub
@@ -442,11 +450,32 @@ irq14:
 ; 47: IRQ15
 irq15:
     cli
+; check spurious
+	mov al, 0x0B
+	out 0xA0, al
+	in al, 0xA0           ;al = slave "In Service Register"
+	test eax, 1<<7
+	jz spurious
+
     push byte 0
     push byte 47
     jmp irq_common_stub
 
-extern irq_handler
+spurious:
+	sti
+	iret
+
+
+; 48: IRQ48 APIC
+irq48:
+	cli
+    push byte 0
+    push byte 48
+    jmp apic_irq_common_stub
+
+
+extern pic_irq_handler
+extern apic_irq_handler
 
 irq_common_stub:
     pusha
@@ -463,7 +492,7 @@ irq_common_stub:
     mov eax, esp
 
     push eax
-    mov eax, irq_handler
+    mov eax, pic_irq_handler
     call eax
     pop eax
 
@@ -476,7 +505,33 @@ irq_common_stub:
     sti
     iret
     
-    
+apic_irq_common_stub:
+    pusha
+    push ds
+    push es
+    push fs
+    push gs
+
+    mov ax, 0x10
+    mov ds, ax
+    mov es, ax
+    mov fs, ax
+    mov gs, ax
+    mov eax, esp
+
+    push eax
+    mov eax, apic_irq_handler
+    call eax
+    pop eax
+
+    pop gs
+    pop fs
+    pop es
+    pop ds
+    popa
+    add esp, 8
+    sti
+    iret
     
 
 
