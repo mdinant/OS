@@ -16,11 +16,12 @@ start:
 ; will insert an 'extern _main', followed by 'call _main', right
 ; before the 'jmp $'.
 stublet:
-	push ebx
-    push eax
+	;push ebx
+    ;push eax
     extern _main
     call _main
     jmp $
+
 
 
 
@@ -29,7 +30,11 @@ stublet:
 global idt_load
 extern idtp
 idt_load:
-    lidt [idtp]
+    ;lidt [idtp]
+
+    mov eax, [esp+4]
+    lidt [eax]
+
     ret
 
 ; In just a few pages in this tutorial, we will add our Interrupt
@@ -334,6 +339,7 @@ global irq13
 global irq14
 global irq15
 global irq48
+global irq255
 
 ; 32: IRQ0
 irq0:
@@ -473,6 +479,9 @@ irq48:
     push byte 48
     jmp apic_irq_common_stub
 
+; apic spurious, ignore
+irq255:
+	iret
 
 extern pic_irq_handler
 extern apic_irq_handler
