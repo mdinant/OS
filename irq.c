@@ -27,7 +27,7 @@ extern void irq14();
 extern void irq15();
 
 extern void irq48();
-
+extern void irq255();
 
 /* This array is actually an array of function pointers. We use
 *  this to handle custom IRQ handlers for a given IRQ */
@@ -101,6 +101,7 @@ void irq_install()
      * APIC
      */
     idt_set_gate(48, (unsigned)irq48, 0x08, 0x8E);
+    idt_set_gate(255, (unsigned)irq255, 0x08, 0x8E);
 }
 
 /* Each of the IRQ ISRs point to this function, rather than

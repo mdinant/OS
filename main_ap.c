@@ -5,7 +5,11 @@
 extern smp_t smp;
 
 void test_stack(int val) {
-	memcpy((char*)0xb8000, (char *)&val, 4);
+	//memcpy((char*)0xb8000, (char *)&val, 4);
+	//char * c = (char*)0xb8000;
+	//*c = (char*)(&val);
+	//val = 666;
+
 }
 
 void _main_ap()
@@ -16,10 +20,12 @@ void _main_ap()
 	test_stack(0x2f4b2f4f);
 
 
-	apic_write(INTERRUPT_COMMAND_REGISTER_2, smp.processorList[0].ApicId << 24);
+//	apic_write(INTERRUPT_COMMAND_REGISTER_2, smp.processorList[0].ApicId << 24);
 //	apic_write(INTERRUPT_COMMAND_REGISTER_1, 0x4400);
-	apic_write(INTERRUPT_COMMAND_REGISTER_1, 0x4030);
+//	apic_write(INTERRUPT_COMMAND_REGISTER_1, 0x4030);
 
+	//idt_install();
+	//isrs_install();
 
 	for (;;); // or halt
 }

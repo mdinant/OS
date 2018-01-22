@@ -11,7 +11,7 @@ void apic_irq48_handler(struct regs *r) {
 	printf("got a call from other processor :)\n");
 }
 
-void _main(multiboot_info_t *mbt, unsigned long magic)
+void _main(/*multiboot_info_t *mbt, unsigned long magic*/)
 {
 	
 	gdt_install();

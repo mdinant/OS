@@ -116,7 +116,8 @@ void init_cpu() {
 
 
 	copy_ap_startup_code();
-	//apic_write(SPURIOUS_INTERRUPT_VECTOR_REGISTER, 0x100);
+
+	apic_write(SPURIOUS_INTERRUPT_VECTOR_REGISTER, 0x1FF);
 
 	printf("ApicID\tStack\tStatus\n");
 
