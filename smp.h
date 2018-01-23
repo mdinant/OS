@@ -4,9 +4,15 @@
 #include <system.h>
 #include "idt.h"
 
+typedef enum  {
+	WAITING = 0, BUSY = 1
+} ProcessorState;
+
 typedef struct {
 	unsigned char ApicId;
 	bool isBsp;
+	ProcessorState state;
+
 	/* Declare an IDT of 256 entries. Although we will only use the
 	*  first 32 entries in this tutorial, the rest exists as a bit
 	*  of a trap. If any undefined IDT entry is hit, it normally
@@ -15,6 +21,12 @@ typedef struct {
 	*  "Unhandled Interrupt" exception */
 	struct idt_entry idt[256];
 	struct idt_ptr idtp;
+
+
+
+	/* Our GDT, with 3 entries, and finally our special GDT pointer */
+	//struct gdt_entry gdt[3];
+	//struct gdt_ptr gp;
 } processor_t;
 
 

@@ -17,7 +17,7 @@ struct idt_ptr
     unsigned int base;
 } __attribute__((packed));
 
-void idt_set_gate(unsigned char num, unsigned long base, unsigned short sel, unsigned char flags);
-void idt_install();
+void idt_set_gate(struct idt_entry * idt, unsigned char num, unsigned long base, unsigned short sel, unsigned char flags);
+void idt_install(struct idt_entry * idt, struct idt_ptr * idtp);
 
 #endif

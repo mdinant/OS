@@ -4,6 +4,8 @@
 *
 *  Notes: No warranty expressed or implied. Use at own risk. */
 #include <system.h>
+#include "gdt.h"
+
 
 /* Defines a GDT entry */
 struct gdt_entry

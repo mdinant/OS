@@ -1,9 +1,13 @@
-//#include <system.h>
+#include <system.h>
 #include "apic.h"
 #include "smp.h"
+#include "irq.h"
 //unsigned long localApicAddress;
 
 extern smp_t smp;
+extern void irq48();	//asm stuff first
+extern void irq255();
+extern void apic_irq48_handler(struct regs *r);
 
 
 unsigned int apic_read(unsigned int reg) {
@@ -29,4 +33,17 @@ unsigned int apic_wait_icr_idle(void) {
 	} while (timeout++ < 100);
 
 	return send_status;
+}
+
+
+
+
+void apic_irq_install(struct idt_entry * idt) {
+    /**
+     * APIC
+     */
+    idt_set_gate(idt, 48, (unsigned)irq48, 0x08, 0x8E);
+    idt_set_gate(idt, 255, (unsigned)irq255, 0x08, 0x8E);
+
+	irq_install_handler(16, apic_irq48_handler);
 }

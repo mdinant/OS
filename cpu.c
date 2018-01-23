@@ -17,44 +17,12 @@ extern int _ap_stack;
 extern int _running_flag;
 
 extern smp_t smp;
-//Processor processorList[MAX_CPU];
 
-//int processorListSize 						= 0;
-//unsigned long localApicAddress				= 0x0;
 
 void copy_ap_startup_code() {
 
 	char * dest = (char *) 0x1000;
 
-//	char hex[8];
-//	memset(hex, 0, 8);
-//
-//	memset(hex, 0, 8);
-//	hex_to_char((int) &_boot_addr, hex);
-//	printf("boot_addr: \t0x%s\n", hex);
-//	memset(hex, 0, 8);
-//	hex_to_char((int) &_boot_end, hex);
-//	printf("boot_end: \t0x%s\n", hex);
-//
-//	memset(hex, 0, 8);
-//	hex_to_char((int) &_ap_start, hex);
-//	printf("ap_start: \t0x%s\n", hex);
-//
-//	memset(hex, 0, 8);
-//	hex_to_char((int) &_ap_end, hex);
-//	printf("ap_end: \t0x%s\n", hex);
-//
-//	hex_to_char((int) dest, hex);
-//	printf("dest: \t0x%s\n", hex);
-//	memset(hex, 0, 8);
-//	hex_to_char((int) &_ap_boot_start, hex);
-//	printf("ap_boot_start: \t0x%s\n", hex);
-//	memset(hex, 0, 8);
-//	hex_to_char((int) &_ap_boot_end, hex);
-//	printf("ap_boot_end: \t0x%s\n", hex);
-//
-//	hex_to_char((int) &end_stack, hex);
-//	printf("end_stack: \t0x%s\n", hex);
 
 	memcpy(dest, (char *) &_ap_boot_start,
 			(int) &_ap_boot_end - (int) &_ap_boot_start);
@@ -63,40 +31,44 @@ void copy_ap_startup_code() {
 
 
 
-
-
-void init_cpu() {
-
-	//disable_pic();
-	detect_cpu();
-	anykey();
-	initSMP();	// just zero out a couple of stuff
+bool check_cpu() {
 
 	if (check_cpuid_supported() == FALSE) {
 		printf("CPUID not supported\n");
-		return;
+		return FALSE;
 	}
 	if (check_lapic() == FALSE) {
 		printf("No lAPIC on chip\n");
-		return;
+		return FALSE;
 	}
 	if (check_msr() == FALSE) {
 		printf("No MSR\n");
-		return;
+		return FALSE;
 	}
-	check_bsp() ? printf("we are BSP\n") : printf("we are AP\n");
-
+	if (check_bsp() == TRUE) {
+		smp.processorList[0].isBsp = TRUE;
+	}
 	if (check_rsdp_table() == FALSE) {
 		printf("Could not find/parse RSDP\n");
-		return;
+		return FALSE;
 	}
 	printf("number of processors: %u\n", smp.numberOfProcessors);
 	if (smp.numberOfProcessors <= 1) {
 		printf("only 1 processor detected\n");
-		return;
+		return FALSE;
 	}
 
+	printf("cpu stuff good\n");
 
+	return TRUE;
+
+}
+
+void init_cpu() {
+
+	//disable_pic();
+
+	anykey();
 
 	unsigned long *localApicIdVersionReg = (unsigned long *) (smp.localApicAddress
 			+ LOCAL_APIC_ID_VERSION_REGISTER);
@@ -128,6 +100,9 @@ void init_cpu() {
 	int stack_count = 1;
 	for (i = 0; i < smp.numberOfProcessors; i++) {
 		if (smp.processorList[i].ApicId != 0) {	// don't start bsp
+
+			_running_flag = i;
+
 			unsigned long send_status = 0, accept_status = 0;
 			_ap_stack = (int) &end_stack - (stack_count++ * STACK_SIZE);
 			char hex[8];
@@ -176,14 +151,14 @@ void init_cpu() {
 			}
 
 			// waiting for AP's signal via memory
-			if (_running_flag == 0) {
+			if (_running_flag != 0) {
 				printf("waiting for flag (probably forever)\n");
-				while (_running_flag == 0) {}
+				while (_running_flag != 0) {}
 			}
 
 			printf("\tOK\n");
 
-			_running_flag = 0;	// on to next
+				// on to next
 
 		}
 	}

@@ -5,15 +5,15 @@
 *  Notes: No warranty expressed or implied. Use at own risk. */
 #include <system.h>
 #include "idt.h"
-struct idt_entry idt[256];
-struct idt_ptr idtp;
+//struct idt_entry idt[256];
+//struct idt_ptr idtp;
 
 /* This exists in 'start.asm', and is used to load our IDT */
 extern void idt_load(struct idt_ptr * idtp);
 
 /* Use this function to set an entry in the IDT. Alot simpler
 *  than twiddling with the GDT ;) */
-void idt_set_gate(unsigned char num, unsigned long base, unsigned short sel, unsigned char flags)
+void idt_set_gate(struct idt_entry * idt, unsigned char num, unsigned long base, unsigned short sel, unsigned char flags)
 {
     /* The interrupt routine's base address */
     idt[num].base_lo = (base & 0xFFFF);
@@ -27,19 +27,19 @@ void idt_set_gate(unsigned char num, unsigned long base, unsigned short sel, uns
 }
 
 /* Installs the IDT */
-void idt_install()
+void idt_install(struct idt_entry * idt, struct idt_ptr * idtp)
 {
     /* Sets the special IDT pointer up, just like in 'gdt.c' */
-    idtp.limit = (sizeof (struct idt_entry) * 256) - 1;
-    idtp.base = (unsigned int)&idt;
+    idtp->limit = (sizeof (struct idt_entry) * 256) - 1;
+    idtp->base = (unsigned int)idt;
 
     /* Clear out the entire IDT, initializing it to zeros */
-    memset(&idt, 0, sizeof(struct idt_entry) * 256);
+    memset(idt, 0, sizeof(struct idt_entry) * 256);
 
     /* Add any new ISRs to the IDT here using idt_set_gate */
 
 
 
     /* Points the processor's internal register to the new IDT */
-    idt_load(&idtp);
+    idt_load(idtp);
 }

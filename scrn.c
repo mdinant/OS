@@ -156,9 +156,10 @@ void settextcolor(unsigned char forecolor, unsigned char backcolor)
 }
 
 /* Sets our text-mode VGA pointer, then clears the screen for us */
-void init_video(void)
+void init_text_video(void)
 {
     textmemptr = (unsigned short *)0xB8000;
+
     cls();
 }
 

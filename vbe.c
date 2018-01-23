@@ -1,88 +1,11 @@
 #include <system.h>
+#include "vbe.h"
 
-#define VBE_FAR(x) 								unsigned short x[2]
-
-// lekker bij elkaar
-#define VBE_INFO_ADDR							0x2000
-#define VBE_MODE_INFO_ADDR						0x3000
-#define REALPTR									(unsigned int)
-#define COMMAND_GET_SUPERVGA_INFORMATION    	0x4F00
-#define COMMAND_GET_SUPERVGA_MODE_INFORMATION	0x4F01
-#define COMMAND_SET_SUPERVGA_MODE				0x4F02
-
-enum VESARet {
-	FunctionSupported,
-	FunctionNotSupported,
-	FunctionCallSuccessful,
-	FunctionCallFailed
-};
-
-
-typedef struct {
-	unsigned char VESASignature[4];
-	unsigned short VESAVersion;
-	unsigned long OEMStringPtr;
-	unsigned char Capabilities[4];
-	unsigned long VideoModesPtr;
-	unsigned short TotalMemory;
-	unsigned short OemSoftwareRev;
-	unsigned long OemVendorNamePtr;
-	unsigned long OemProductNamePtr;
-	unsigned long OemProductRevPtr;
-	unsigned char Reserved[222];
-	unsigned char OemData[256];
-}__attribute__ ((packed)) vbeControllerInfo;
-
-typedef struct {
-	unsigned short ModeAttributes;
-	unsigned char WinAAttributes;
-	unsigned char WinBAttributes;
-	unsigned short WinGranularity;
-	unsigned short WinSize;
-	unsigned short WinASegment;
-	unsigned short WinBSegment;
-	unsigned long WinFuncPtr;
-	unsigned short BytesPerScanLine;
-	unsigned short XResolution;
-	unsigned short YResolution;
-	unsigned char XCharSize;
-	unsigned char YCharSize;
-	unsigned char NumberOfPlanes;
-	unsigned char BitsPerPixel;
-	unsigned char NumberOfBanks;
-	unsigned char MemoryModel;
-	unsigned char BankSize;
-	unsigned char NumberOfImagePages;
-	unsigned char Reserved_page;
-	unsigned char RedMaskSize;
-	unsigned char RedMaskPos;
-	unsigned char GreenMaskSize;
-	unsigned char GreenMaskPos;
-	unsigned char BlueMaskSize;
-	unsigned char BlueMaskPos;
-	unsigned char ReservedMaskSize;
-	unsigned char ReservedMaskPos;
-	unsigned char DirectColorModeInfo;
-	unsigned long PhysBasePtr;
-	unsigned long OffScreenMemOffset;
-	unsigned short OffScreenMemSize;
-	unsigned char Reserved[206];
-}__attribute__ ((packed)) vbeModeInfo;
-
+#include "apic.h"
+#include "smp.h"
 
 vbeControllerInfo * ctrl = (vbeControllerInfo *) VBE_INFO_ADDR;
 vbeModeInfo * inf = (vbeModeInfo *) VBE_MODE_INFO_ADDR;
-
-void showVesaInfo();
-void printVbeControllerInfo(vbeControllerInfo * ctrl);
-bool isModeInList(unsigned short modeNum, vbeControllerInfo * ctrl);
-void printModesWithBBP(unsigned short bbp, vbeControllerInfo * ctrl);
-
-enum VESARet VESAFunc(regs32_t * regs);
-enum VESARet getSuperVGAInformation(vbeControllerInfo *ctrl);
-enum VESARet getSuperVGAModeInformation(unsigned short modeNum);
-enum VESARet setVESAMode(unsigned short modeNum, bool flat);
-bool demoMode(unsigned short modeNum);
 
 bool isModeInList(unsigned short modeNum, vbeControllerInfo * ctrl) {
 	unsigned short * mode = (unsigned short*) segToFlatAddr(
@@ -229,21 +152,21 @@ void printVbeControllerInfo(vbeControllerInfo * ctrl) {
 
 }
 
-void showVesaInfo() {
-	long long tlonglong;
-	printf("sizeof long long: %u\n", sizeof(tlonglong));
-	printf("GET_SUPERVGA_INFORMATION... ");
-	anykey();
+bool showVesaInfo() {
+//	long long tlonglong;
+//	printf("sizeof long long: %u\n", sizeof(tlonglong));
+//	printf("GET_SUPERVGA_INFORMATION... ");
+//	anykey();
 	enum VESARet ret = getSuperVGAInformation(ctrl);
 
 	switch (ret) {
 	case FunctionNotSupported: {
 		printf("Function Not Supported\n");
-		return;
+		return FALSE;
 	}
 	case FunctionCallFailed: {
 		printf("Function Call Failed\n");
-		return;
+		return FALSE;
 	}
 	default: {
 		printf("FunctionCallSuccessful\n");
@@ -270,9 +193,11 @@ void showVesaInfo() {
 	anykey();
 	printModesWithBBP(32, ctrl);
 
+	return TRUE;
+
 }
 
-bool demoMode(unsigned short modeNum) {
+bool tryMode(unsigned short modeNum) {
 
 	char hex[8];
 	hex_to_char(modeNum, hex);
@@ -311,55 +236,90 @@ bool demoMode(unsigned short modeNum) {
 		// now in video mode :)
 		//	anykey();
 
-		size_t bufSize = inf->BytesPerScanLine * inf->YResolution;
-
-		unsigned char *bBuffer = (unsigned char *)(inf->PhysBasePtr + bufSize);
-
-		unsigned char * ptr = (unsigned char *) inf->PhysBasePtr;
-
-		// do a color
-
-		unsigned char color[] = {255, 100,50,0};
-		//unsigned char iColor = 200;
-		int c;
-		//size_t size = 1;
-
-		for (c = 0; c < bufSize - 4; c+=4) {
 
 
-			bBuffer[c] = color[0];
-			bBuffer[c+1] = color[1];
-			bBuffer[c+2] = color[2];
-			bBuffer[c+3] = color[3];
-		}
-
-
-		//memset(bBuffer, 200, bufSize);
-		//memcpy(ptr, bBuffer, bufSize);
-
-
-		memcpy_SSE2(ptr, bBuffer, bufSize);
-
-		//memset(ptr, 128, 2000);
-		anykey();
-	}
 		break;
+	}
+
 
 	}
+
+
+
 
 	return TRUE;
 }
 
 bool init_vbe() {
 
-
-	showVesaInfo();
-
-	//demoMode(0x146);
-
-	return TRUE;
-
+	//return showVesaInfo();
+return TRUE;
 }
 
+void apic_irq48_handler(struct regs *r) {
+	//printf("got a call from other processor :)\n");
+	//settextcolor(34,56);
+}
+
+void demoVBE() {
+
+//	bool result = tryMode(0x145);
+//
+//	if (result == FALSE) {
+//		setVESAMode(3, FALSE);
+//		printf("Could not set mode\n");
+//		return;
+//	}
+//	setVESAMode(3, FALSE);
+//	anykey();
+	// wake up other procs
+	extern smp_t smp;
+	int i;
+	for(i = 0; i < smp.numberOfProcessors; i++) {
+		if (smp.processorList[i].ApicId != 0) {	// don't start bsp
+			apic_write(INTERRUPT_COMMAND_REGISTER_2, smp.processorList[i].ApicId << 24);
+			//	apic_write(INTERRUPT_COMMAND_REGISTER_1, 0x4400);
+			apic_write(INTERRUPT_COMMAND_REGISTER_1, 0x4030);
+		}
+	}
 
 
+
+
+//	size_t bufSize = inf->BytesPerScanLine * inf->YResolution;
+//
+//	unsigned char *bBuffer = (unsigned char *) (inf->PhysBasePtr + bufSize);
+//
+//	unsigned char * ptr = (unsigned char *) inf->PhysBasePtr;
+//
+//	// do a color
+//
+//	unsigned char color[] = { 50, 100, 200, 255 };
+//	//unsigned char iColor = 200;
+//	int c;
+//	//size_t size = 1;
+//
+//	for (c = 0; c < bufSize - 4; c += 4) {
+//
+//		bBuffer[c] = color[0];
+//		bBuffer[c + 1] = color[1];
+//		bBuffer[c + 2] = color[2];
+//		bBuffer[c + 3] = color[3];
+//	}
+//
+//	//memset(bBuffer, 200, bufSize);
+//	memcpy(ptr, bBuffer, bufSize);
+//
+//	//memcpy_SSE2(ptr, bBuffer, bufSize);
+//
+//	//memset(ptr, 128, 2000);
+//
+//	anykey();
+//
+//
+//	setVESAMode(3, FALSE);
+	printf("DONE\n");
+
+
+
+}

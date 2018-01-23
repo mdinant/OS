@@ -5,45 +5,48 @@
  *  Notes: No warranty expressed or implied. Use at own risk. */
 #include <system.h>
 #include <multiboot.h>
+#include "smp.h"
+#include "irq.h"
+#include "isrs.h"
+#include "gdt.h"
+#include "vbe.h"
+
+extern smp_t smp;
 
 
-void apic_irq48_handler(struct regs *r) {
-	printf("got a call from other processor :)\n");
-}
 
-void _main(/*multiboot_info_t *mbt, unsigned long magic*/)
-{
-	
+void _main(/*multiboot_info_t *mbt, unsigned long magic*/) {
+	initSMP();
+
 	gdt_install();
-	idt_install();
-	isrs_install();
-	irq_install();
-	init_video();
+	idt_install(smp.processorList[0].idt, &smp.processorList[0].idtp);
+	isrs_install(smp.processorList[0].idt);
+	irq_remap();
+	irq_install(smp.processorList[0].idt);
 	timer_install();
 	init_mouse();
 	keyboard_install();
-	
-	irq_install_handler(16, apic_irq48_handler);
+	init_text_video();
 
 	__asm__ __volatile__ ("sti");
+	detect_cpu();
+	bool systemReady = check_cpu();
+	if (systemReady == FALSE) {
 
-//	unsigned int p = (int)&_ap_start;
-//
-//	char hex[8];
-//	hex_to_char(p, hex);
-//	printf("ap_start: 0x%s\n", hex);
-//	anykey();
+		printf("Can not operate on this system\n");
+		return;
+	}
+	apic_irq_install(smp.processorList[0].idt);
 
 	showMemory();
 
-
 	init_cpu();
 
+	if (init_vbe() == FALSE) {
+		return;
+	}
+	demoVBE();
 
-	//init_vbe();
-
-
-//	_main_ap();
 	
 	for (;;); // or halt
 }
