@@ -3,14 +3,14 @@
 global start
 
 extern end_stack
+extern _ap_stack
+extern _main_ap
+global _get_esp
+global _tramp
 
 start:
     mov esp, end_stack     ; This points the stack to our new stack area
     jmp stublet
-
-
-
-
 
 ; This is an endless loop here. Make a note of this: Later on, we
 ; will insert an 'extern _main', followed by 'call _main', right
@@ -22,13 +22,20 @@ stublet:
     call _main
     jmp $
 
+_get_esp:
+	mov eax, esp
+	ret
 
-
+_tramp:
+	;mov esp, 0x189074
+	mov esp, [_ap_stack]
+	call _main_ap
+	hlt
 
 ; Loads the IDT defined in '_idtp' into the processor.
 ; This is declared in C as 'extern void idt_load();'
 global idt_load
-extern idtp
+;extern idtp
 idt_load:
     ;lidt [idtp]
 
@@ -468,12 +475,23 @@ irq15:
     jmp irq_common_stub
 
 spurious:
+
 	sti
 	iret
 
 
 ; 48: IRQ48 APIC
 irq48:
+    ;push eax
+    ;mov eax, cls
+    ;call eax
+    ;pop eax
+;hlt
+;	push ecx
+;	mov ecx, 0xFEE00000
+;	mov [ecx], dword 0x000000B0 >> 4
+;	pop ecx
+;	iret
 	cli
     push byte 0
     push byte 48
@@ -481,6 +499,10 @@ irq48:
 
 ; apic spurious, ignore
 irq255:
+    ;push eax
+    ;mov eax, cls
+    ;call eax
+    ;pop eax
 	iret
 
 extern pic_irq_handler
@@ -514,7 +536,16 @@ irq_common_stub:
     sti
     iret
     
+   ; extern test_func_c
+
 apic_irq_common_stub:
+    ;push eax
+    ;mov eax, cls
+    ;call eax
+    ;pop eax
+    ;add esp, 8
+    ;sti
+    ;iret
     pusha
     push ds
     push es
@@ -532,7 +563,6 @@ apic_irq_common_stub:
     mov eax, apic_irq_handler
     call eax
     pop eax
-
     pop gs
     pop fs
     pop es
@@ -540,6 +570,7 @@ apic_irq_common_stub:
     popa
     add esp, 8
     sti
+
     iret
     
 

@@ -4,14 +4,20 @@
 #include <system.h>
 #include "idt.h"
 
-typedef enum  {
-	WAITING = 0, BUSY = 1
-} ProcessorState;
+//enum ProcessorState {
+//	WAITING = 0, BUSY = 1
+//};
+
+#define WAITING		0
+#define BUSY		1
+
 
 typedef struct {
 	unsigned char ApicId;
 	bool isBsp;
-	ProcessorState state;
+	int state;
+	int esp;
+	//int stack;
 
 	/* Declare an IDT of 256 entries. Although we will only use the
 	*  first 32 entries in this tutorial, the rest exists as a bit
@@ -22,11 +28,15 @@ typedef struct {
 	struct idt_entry idt[256];
 	struct idt_ptr idtp;
 
-
+	void *irq48_routine;
 
 	/* Our GDT, with 3 entries, and finally our special GDT pointer */
 	//struct gdt_entry gdt[3];
 	//struct gdt_ptr gp;
+
+	unsigned int irq_count;
+
+
 } processor_t;
 
 

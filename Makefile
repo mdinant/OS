@@ -1,6 +1,6 @@
 CC=/root/opt/cross/bin/i686-elf-gcc
 
-CFLAGS= -fstrength-reduce -fomit-frame-pointer -fno-asynchronous-unwind-tables -finline-functions -nostdinc -fno-builtin 
+CFLAGS= -fstrength-reduce -fomit-frame-pointer -fno-asynchronous-unwind-tables -finline-functions -nostdinc -fno-builtin  -ffixed-ebp
 
 INCLUDES = -I/home/matthijs/OS/bran/include
  

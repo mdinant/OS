@@ -146,6 +146,7 @@ void pic_irq_handler(struct regs *r)
 
 void apic_irq_handler(struct regs *r)
 {
+
     /* This is a blank function pointer */
     void (*handler)(struct regs *r);
 
@@ -155,7 +156,7 @@ void apic_irq_handler(struct regs *r)
         handler(r);
     }
 
-
+    cls();
 
     apic_write(EOI_REGISTER, 0x0);
 }

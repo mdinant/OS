@@ -7,6 +7,9 @@
 vbeControllerInfo * ctrl = (vbeControllerInfo *) VBE_INFO_ADDR;
 vbeModeInfo * inf = (vbeModeInfo *) VBE_MODE_INFO_ADDR;
 
+extern smp_t smp;
+extern int _ap_stack;
+
 bool isModeInList(unsigned short modeNum, vbeControllerInfo * ctrl) {
 	unsigned short * mode = (unsigned short*) segToFlatAddr(
 			ctrl->VideoModesPtr);
@@ -257,9 +260,16 @@ return TRUE;
 }
 
 void apic_irq48_handler(struct regs *r) {
-	//printf("got a call from other processor :)\n");
-	//settextcolor(34,56);
+	//int val = 0x2f4b2f4f;
+	//memcpy((char*)0xb8000, (char *)&val, 4);
+	//register int id asm("ebp");
+//cls();
+	//smp.processorList[1].state = 1;
+	//smp.processorList[id].irq_count++;
+
+
 }
+
 
 void demoVBE() {
 
@@ -273,17 +283,28 @@ void demoVBE() {
 //	setVESAMode(3, FALSE);
 //	anykey();
 	// wake up other procs
-	extern smp_t smp;
-	int i;
-	for(i = 0; i < smp.numberOfProcessors; i++) {
-		if (smp.processorList[i].ApicId != 0) {	// don't start bsp
-			apic_write(INTERRUPT_COMMAND_REGISTER_2, smp.processorList[i].ApicId << 24);
-			//	apic_write(INTERRUPT_COMMAND_REGISTER_1, 0x4400);
-			apic_write(INTERRUPT_COMMAND_REGISTER_1, 0x4030);
-		}
+
+//	int i;
+//	for(i = 0; i < smp.numberOfProcessors; i++) {
+//		if (smp.processorList[i].ApicId != 0) {	// don't start bsp
+//			apic_write(INTERRUPT_COMMAND_REGISTER_2, smp.processorList[i].ApicId << 24);
+//
+//			apic_write(INTERRUPT_COMMAND_REGISTER_1, 0x4030);
+//		}
+//	}
+
+	//printf("sending int to proc %u\n", smp.processorList[1].ApicId);
+
+//	apic_write(INTERRUPT_COMMAND_REGISTER_2, smp.processorList[1].ApicId << 24);
+//	apic_write(INTERRUPT_COMMAND_REGISTER_1, 0x4030);
+	smp.processorList[1].state = 1;
+	while(TRUE) {
+		printf("int count proc 1: %u\n", smp.processorList[1].irq_count);
+		printf("esp proc 1: %d\n", smp.processorList[1].esp);
+		printf("_sp_stack: %d\n", _ap_stack);
+		//printf("state %d\n", smp.processorList[1].state);
+		sleep(1000);
 	}
-
-
 
 
 //	size_t bufSize = inf->BytesPerScanLine * inf->YResolution;
@@ -318,7 +339,7 @@ void demoVBE() {
 //
 //
 //	setVESAMode(3, FALSE);
-	printf("DONE\n");
+//	printf("DONE\n");
 
 
 

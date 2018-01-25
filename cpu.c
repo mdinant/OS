@@ -68,7 +68,7 @@ void init_cpu() {
 
 	//disable_pic();
 
-	anykey();
+	//anykey();
 
 	unsigned long *localApicIdVersionReg = (unsigned long *) (smp.localApicAddress
 			+ LOCAL_APIC_ID_VERSION_REGISTER);
@@ -91,6 +91,9 @@ void init_cpu() {
 
 	apic_write(SPURIOUS_INTERRUPT_VECTOR_REGISTER, 0x1FF);
 
+	hex_to_char(smp.localApicAddress, hex);
+	printf("apic address: %s\n", hex);
+
 	printf("ApicID\tStack\tStatus\n");
 
 	/**
@@ -100,10 +103,11 @@ void init_cpu() {
 	int stack_count = 1;
 	for (i = 0; i < smp.numberOfProcessors; i++) {
 		if (smp.processorList[i].ApicId != 0) {	// don't start bsp
-
+//		if (smp.processorList[i].ApicId == 1) {
 			_running_flag = i;
 
 			unsigned long send_status = 0, accept_status = 0;
+
 			_ap_stack = (int) &end_stack - (stack_count++ * STACK_SIZE);
 			char hex[8];
 			hex_to_char(_ap_stack, hex);
@@ -161,8 +165,9 @@ void init_cpu() {
 				// on to next
 
 		}
+//	}
 	}
-
+	//disable_pic();
 
 
 }
