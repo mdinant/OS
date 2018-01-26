@@ -2,12 +2,13 @@
 #include "smp.h"
 #include "apic.h"
 
+#include "render.h"
+
 extern smp_t smp;
 extern int _running_flag;
+extern screen_t screen;
 
 
-extern int _get_esp();
-extern int _ap_stack;
 void test_func_c() {
 	memcpy((char*)0xb8000, (char *)0xb8000, 4);
 }
@@ -24,11 +25,8 @@ void test_stack(int val) {
 
 
 void _main_ap(int processorNum) {
-	int esp = _get_esp();
-	__asm__ __volatile__ ("sti");
 
-	//int val = 0x2f4b2f4f;
-	//test_stack(0x2f4b2f4f);
+	__asm__ __volatile__ ("sti");
 
 	/**
 	 * AP Shopping list:
@@ -38,31 +36,46 @@ void _main_ap(int processorNum) {
 
 	//apic_irq_install(smp.processorList[processorNum].idt);	// so we can receive
 	//apic_write(SPURIOUS_INTERRUPT_VECTOR_REGISTER, 0x1FF);
-	smp.processorList[processorNum].esp = esp;
-	//smp.processorList[processorNum].state = processorNum;
-	//int temp = _running_flag;
+
+	smp.processorList[processorNum].state = WAITING;
+	smp.processorList[processorNum].stateLock.item = (int*)&smp.processorList[processorNum].state;
 	_running_flag = 0;	// RESET flag to inform bsp we are up and running
 
-
-
-	//cls();
-
-	//processor_t * processor = &smp.processorList[processorNum];
-
-	//while (smp.processorList[processorNum].state == 0) {}
-	//smp.processorList[processorNum].irq_count++;
-//	void (*functionPtr)(int) = &test_stack;
-//
-//	(*functionPtr)(0x2f4b2f4f);
-	if (processorNum == 1) {
-		//cls();
-		while(smp.processorList[1].state == 0) {
-			//printf("state is still 0\n");
-			//cls();
-		}
-		//cls();
-		smp.processorList[1].irq_count = 666;
+	while (smp.processorList[processorNum].state == WAITING) {
+		// do some NOP or something
 	}
 
-	while (TRUE){}
+	//renderScreenPart(0, 0, 100, 100);
+
+	//size_t size = screen.bufSize / smp.numberOfProcessors;
+	size_t size = screen.bufSize / 4;
+
+	char * start = &screen.bBuffer[processorNum * size];
+	char * end = &screen.bBuffer[(processorNum * size) + size];
+
+//	renderScreenBufferPart(&screen.bBuffer[processorNum * size], &screen.bBuffer[size], 200);
+	char blue[] = {255, 0, 0, 0};
+	char green[] = {0, 255, 0, 0};
+	char red[] = {0, 0, 255, 0};
+	char * color;
+	switch (processorNum) {
+	case 1:
+		color = red;
+		break;
+	case 2:
+		color = blue;
+		break;
+	case 3:
+		color = green;
+		break;
+	default:
+		break;
+	}
+
+	renderScreenBufferPart(start, end, color);
+
+	//char red[] = RED;
+	while (smp.processorList[processorNum].state == BUSY) {
+		smp.processorList[processorNum].state = WAITING;
+	}
 }

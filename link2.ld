@@ -43,41 +43,23 @@ SECTIONS
 	 	smp.o(.text) 
 	 	apic.o(.text)
 	 	acpi.o(.text)
+	 	render.o(.text)
         _boot_end = .;
         . = ALIGN(4096);
         _ap_start = .;
         	main_ap.o(.text)
         _ap_end = .;
         
-
-    	/**(.rodata)*/
     	. = ALIGN(4096);
 
+        ap_boot.o(.text)
 
 
- /*       _ap_boot_start = .;  */
-        	ap_boot.o(.text)
- /*       _ap_boot_end = .;*/
-        /*. = ALIGN(4096);*/
   }
- /*
-    .ap_boot_text : {
-        _ap_boot_start = .;  
-        ap_boot.o(.ap_boot_text)
-        _ap_boot_end = .;
-  	}
-  	*/ 
-  	/*
-	.ap_stack : {
-		ap_boot.o(.ap_stack)
-	}*/
 
-/*			
-     .ap_boot_data : {
-		ap_boot.o(.ap_boot_data)
-  	}  	
-_ap_boot_end = .;
-*/	
+
+
+	
     /* Constant data */
     
     .rodata ALIGN( 0x1000 ) :

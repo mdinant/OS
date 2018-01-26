@@ -3,6 +3,10 @@
 
 #include "apic.h"
 #include "smp.h"
+#include "render.h"
+
+extern screen_t screen;
+
 
 vbeControllerInfo * ctrl = (vbeControllerInfo *) VBE_INFO_ADDR;
 vbeModeInfo * inf = (vbeModeInfo *) VBE_MODE_INFO_ADDR;
@@ -273,13 +277,13 @@ void apic_irq48_handler(struct regs *r) {
 
 void demoVBE() {
 
-//	bool result = tryMode(0x145);
+	bool result = tryMode(0x145);
 //
-//	if (result == FALSE) {
-//		setVESAMode(3, FALSE);
-//		printf("Could not set mode\n");
-//		return;
-//	}
+	if (result == FALSE) {
+		setVESAMode(3, FALSE);
+		printf("Could not set mode\n");
+		return;
+	}
 //	setVESAMode(3, FALSE);
 //	anykey();
 	// wake up other procs
@@ -297,50 +301,107 @@ void demoVBE() {
 
 //	apic_write(INTERRUPT_COMMAND_REGISTER_2, smp.processorList[1].ApicId << 24);
 //	apic_write(INTERRUPT_COMMAND_REGISTER_1, 0x4030);
-	smp.processorList[1].state = 1;
-	while(TRUE) {
-		printf("int count proc 1: %u\n", smp.processorList[1].irq_count);
-		printf("esp proc 1: %d\n", smp.processorList[1].esp);
-		printf("_sp_stack: %d\n", _ap_stack);
-		//printf("state %d\n", smp.processorList[1].state);
-		sleep(1000);
+//	smp.processorList[1].state = BUSY;
+//	while(TRUE) {
+//
+//
+//		printf("state %d\n", smp.processorList[1].state);
+//		sleep(1000);
+//	}
+
+
+	screen.bufSize = inf->BytesPerScanLine * inf->YResolution;
+	screen.bBuffer = (char *) (inf->PhysBasePtr + screen.bufSize);
+	screen.bbp = inf->BitsPerPixel * 8;
+	screen.width = inf->XResolution;
+	screen.height = inf->YResolution;
+
+	size_t size = screen.bufSize / 4;
+
+	char * start = &screen.bBuffer[0 * size];
+	char * end = &screen.bBuffer[(0 * size) + size];
+
+//	renderScreenBufferPart(&screen.bBuffer[processorNum * size], &screen.bBuffer[size], 200);
+	char blue[] = {255, 0, 0, 0};
+	char green[] = {0, 255, 0, 0};
+	char red[] = {0, 0, 255, 0};
+	char white[] = {255, 255, 255, 0};
+	char * color;
+	switch (0) {
+	case 0:
+		color = white;
+		break;
+	case 1:
+		color = red;
+		break;
+	case 2:
+		color = blue;
+		break;
+	case 3:
+		color = green;
+		break;
+	default:
+		break;
 	}
 
+	renderScreenBufferPart(start, end, color);
 
-//	size_t bufSize = inf->BytesPerScanLine * inf->YResolution;
-//
-//	unsigned char *bBuffer = (unsigned char *) (inf->PhysBasePtr + bufSize);
-//
-//	unsigned char * ptr = (unsigned char *) inf->PhysBasePtr;
-//
-//	// do a color
-//
-//	unsigned char color[] = { 50, 100, 200, 255 };
-//	//unsigned char iColor = 200;
-//	int c;
-//	//size_t size = 1;
-//
-//	for (c = 0; c < bufSize - 4; c += 4) {
-//
-//		bBuffer[c] = color[0];
-//		bBuffer[c + 1] = color[1];
-//		bBuffer[c + 2] = color[2];
-//		bBuffer[c + 3] = color[3];
+//	int i;
+//	for (i = 1; i < smp.numberOfProcessors; i++) {
+//		smp.processorList[i].state = BUSY;
 //	}
+	smp.processorList[1].state = BUSY;
+	smp.processorList[2].state = BUSY;
+	smp.processorList[3].state = BUSY;
+	char * ptr = (char *) inf->PhysBasePtr;
+
+	bool waiting = TRUE;
+
+//	while (waiting) {
+//		waiting = (smp.processorList[1].state == BUSY) || (smp.processorList[2].state == BUSY) || (smp.processorList[3].state == BUSY);
+//	}
+//	while (waiting) {
+//		//waiting = (smp.processorList[3].state == BUSY);
+//		//waiting = ((smp.processorList[1].state == BUSY) || (smp.processorList[2].state == BUSY) || (smp.processorList[3].state == BUSY));
 //
-//	//memset(bBuffer, 200, bufSize);
-//	memcpy(ptr, bBuffer, bufSize);
-//
-//	//memcpy_SSE2(ptr, bBuffer, bufSize);
-//
-//	//memset(ptr, 128, 2000);
-//
-//	anykey();
-//
-//
-//	setVESAMode(3, FALSE);
-//	printf("DONE\n");
+//		if ((smp.processorList[1].state == WAITING) && (smp.processorList[2].state == WAITING) && (smp.processorList[3].state == WAITING)) {
+//			waiting = FALSE;
+//		}
+//		sleep(100);
+//	}
+
+	while (TRUE) {
+		if (smp.processorList[1].state == WAITING) {
+			break;
+		}
+	}
+	while (TRUE) {
+		if (smp.processorList[2].state == WAITING) {
+			break;
+		}
+	}
+	while (TRUE) {
+		if (smp.processorList[3].state == WAITING) {
+			break;
+		}
+	}
+	memcpy(ptr, screen.bBuffer, screen.bufSize);
 
 
+	// do a color
+
+
+
+	//memcpy_SSE2(ptr, bBuffer, bufSize);
+
+	//memset(ptr, 128, 2000);
+
+	anykey();
+
+
+	setVESAMode(3, FALSE);
+	printf("state1: %u\n", smp.processorList[1].state);
+	printf("state2: %u\n", smp.processorList[2].state);
+	printf("state3: %u\n", smp.processorList[3].state);
 
 }
