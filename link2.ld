@@ -44,6 +44,7 @@ SECTIONS
 	 	apic.o(.text)
 	 	acpi.o(.text)
 	 	render.o(.text)
+	 	lock.o(.text)
         _boot_end = .;
         . = ALIGN(4096);
         _ap_start = .;

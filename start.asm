@@ -18,6 +18,7 @@ start:
 stublet:
 	;push ebx
     ;push eax
+    ;mov ebp, dword 1
     extern _main
     call _main
     jmp $
@@ -26,11 +27,10 @@ _get_esp:
 	mov eax, esp
 	ret
 
-_tramp:
-	;mov esp, 0x189074
-	mov esp, [_ap_stack]
-	call _main_ap
-	hlt
+;_tramp:
+;	mov esp, [_ap_stack]
+;	call _main_ap
+;	hlt
 
 ; Loads the IDT defined in '_idtp' into the processor.
 ; This is declared in C as 'extern void idt_load();'

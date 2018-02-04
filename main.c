@@ -12,8 +12,12 @@
 #include "vbe.h"
 
 extern smp_t smp;
+//extern void acquireLock(int lock);
+//extern void releaseLock(int lock);
 
 
+
+int dummy = 0;
 
 void _main(/*multiboot_info_t *mbt, unsigned long magic*/) {
 	initSMP();
@@ -28,7 +32,7 @@ void _main(/*multiboot_info_t *mbt, unsigned long magic*/) {
 	keyboard_install();
 	init_text_video();
 
-	__asm__ __volatile__ ("sti");
+
 	detect_cpu();
 	bool systemReady = check_cpu();
 	if (systemReady == FALSE) {
@@ -37,8 +41,10 @@ void _main(/*multiboot_info_t *mbt, unsigned long magic*/) {
 		return;
 	}
 	apic_irq_install(smp.processorList[0].idt);
-
+	__asm__ __volatile__ ("sti");
 	showMemory();
+
+
 
 	init_cpu();
 

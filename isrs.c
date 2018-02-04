@@ -141,10 +141,12 @@ char * exception_messages[] =
 *  endless loop. All ISRs disable interrupts while they are being
 *  serviced as a 'locking' mechanism to prevent an IRQ from
 *  happening and messing up kernel data structures */
-void fault_handler(struct regs *r)
-{
-    if (r->int_no < 32)
-    {
+void fault_handler(struct regs *r) {
+    if (r->int_no < 32) {
+    	//puts("core ");
+    	//puts(r->ebp);
+    	//puts(": ");
+    	printf("core %u: ", r->ebp);
         puts(exception_messages[r->int_no]);
         puts(" Exception. System Halted!\n");
         for (;;);

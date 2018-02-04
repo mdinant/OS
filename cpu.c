@@ -102,6 +102,7 @@ void init_cpu() {
 	int i;
 	int stack_count = 1;
 	for (i = 0; i < smp.numberOfProcessors; i++) {
+	//for (i = 0; i < 2; i++) {
 		if (smp.processorList[i].ApicId != 0) {	// don't start bsp
 //		if (smp.processorList[i].ApicId == 1) {
 			_running_flag = i;

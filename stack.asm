@@ -11,5 +11,5 @@ global end_stack
 
 ALIGN 16
 SECTION .bss
-	resb STACK_SIZE * MAX_CPU               ; This reserves 8KBytes of memory here
+	resb STACK_SIZE * MAX_CPU
 end_stack:

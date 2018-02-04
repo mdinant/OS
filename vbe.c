@@ -12,7 +12,7 @@ vbeControllerInfo * ctrl = (vbeControllerInfo *) VBE_INFO_ADDR;
 vbeModeInfo * inf = (vbeModeInfo *) VBE_MODE_INFO_ADDR;
 
 extern smp_t smp;
-extern int _ap_stack;
+//extern int _ap_stack;
 
 bool isModeInList(unsigned short modeNum, vbeControllerInfo * ctrl) {
 	unsigned short * mode = (unsigned short*) segToFlatAddr(
@@ -278,36 +278,14 @@ void apic_irq48_handler(struct regs *r) {
 void demoVBE() {
 
 	bool result = tryMode(0x145);
-//
+
 	if (result == FALSE) {
 		setVESAMode(3, FALSE);
 		printf("Could not set mode\n");
 		return;
 	}
-//	setVESAMode(3, FALSE);
-//	anykey();
-	// wake up other procs
 
-//	int i;
-//	for(i = 0; i < smp.numberOfProcessors; i++) {
-//		if (smp.processorList[i].ApicId != 0) {	// don't start bsp
-//			apic_write(INTERRUPT_COMMAND_REGISTER_2, smp.processorList[i].ApicId << 24);
-//
-//			apic_write(INTERRUPT_COMMAND_REGISTER_1, 0x4030);
-//		}
-//	}
 
-	//printf("sending int to proc %u\n", smp.processorList[1].ApicId);
-
-//	apic_write(INTERRUPT_COMMAND_REGISTER_2, smp.processorList[1].ApicId << 24);
-//	apic_write(INTERRUPT_COMMAND_REGISTER_1, 0x4030);
-//	smp.processorList[1].state = BUSY;
-//	while(TRUE) {
-//
-//
-//		printf("state %d\n", smp.processorList[1].state);
-//		sleep(1000);
-//	}
 
 
 	screen.bufSize = inf->BytesPerScanLine * inf->YResolution;
@@ -346,45 +324,30 @@ void demoVBE() {
 
 	renderScreenBufferPart(start, end, color);
 
-//	int i;
-//	for (i = 1; i < smp.numberOfProcessors; i++) {
-//		smp.processorList[i].state = BUSY;
-//	}
-	smp.processorList[1].state = BUSY;
-	smp.processorList[2].state = BUSY;
-	smp.processorList[3].state = BUSY;
+	int i;
+	for (i = 1; i < smp.numberOfProcessors; i++) {
+		smp.processorList[i].state = BUSY;
+	}
+
+
+
+	bool done = FALSE;
+
+
+	while (done == FALSE) {
+		done = TRUE;
+		for (i = 1; i < smp.numberOfProcessors; i++) {
+			acquireLock(&smp.processorList[i].lState);
+			if (smp.processorList[i].state == BUSY) {
+				done = FALSE;
+				releaseLock(&smp.processorList[i].lState);
+				break;
+			}
+			releaseLock(&smp.processorList[i].lState);
+		}
+	}
+
 	char * ptr = (char *) inf->PhysBasePtr;
-
-	bool waiting = TRUE;
-
-//	while (waiting) {
-//		waiting = (smp.processorList[1].state == BUSY) || (smp.processorList[2].state == BUSY) || (smp.processorList[3].state == BUSY);
-//	}
-//	while (waiting) {
-//		//waiting = (smp.processorList[3].state == BUSY);
-//		//waiting = ((smp.processorList[1].state == BUSY) || (smp.processorList[2].state == BUSY) || (smp.processorList[3].state == BUSY));
-//
-//		if ((smp.processorList[1].state == WAITING) && (smp.processorList[2].state == WAITING) && (smp.processorList[3].state == WAITING)) {
-//			waiting = FALSE;
-//		}
-//		sleep(100);
-//	}
-
-	while (TRUE) {
-		if (smp.processorList[1].state == WAITING) {
-			break;
-		}
-	}
-	while (TRUE) {
-		if (smp.processorList[2].state == WAITING) {
-			break;
-		}
-	}
-	while (TRUE) {
-		if (smp.processorList[3].state == WAITING) {
-			break;
-		}
-	}
 	memcpy(ptr, screen.bBuffer, screen.bufSize);
 
 
@@ -400,8 +363,8 @@ void demoVBE() {
 
 
 	setVESAMode(3, FALSE);
+
 	printf("state1: %u\n", smp.processorList[1].state);
 	printf("state2: %u\n", smp.processorList[2].state);
 	printf("state3: %u\n", smp.processorList[3].state);
-
 }

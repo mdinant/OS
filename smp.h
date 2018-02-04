@@ -8,16 +8,17 @@ enum ProcessorState {
 	WAITING = 0, BUSY = 1
 };
 
-typedef struct {
-	unsigned int lock __attribute__ ((aligned (32)));
-	void * item;
-} lock_t;
+//typedef struct {
+//	int lock __attribute__ ((aligned (32)));
+//	void * item;
+//} lock_t;
 
+typedef int lock_t __attribute__ ((aligned (32)));
 
 typedef struct {
 	unsigned char ApicId;
 	bool isBsp;
-	lock_t stateLock;
+	lock_t lState;
 	int state;
 
 	/* Declare an IDT of 256 entries. Although we will only use the
@@ -48,5 +49,8 @@ typedef struct {
 
 
 void initSMP();
+
+
+//void releaseLock(int * lock);
 
 #endif

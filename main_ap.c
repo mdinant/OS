@@ -38,22 +38,19 @@ void _main_ap(int processorNum) {
 	//apic_write(SPURIOUS_INTERRUPT_VECTOR_REGISTER, 0x1FF);
 
 	smp.processorList[processorNum].state = WAITING;
-	smp.processorList[processorNum].stateLock.item = (int*)&smp.processorList[processorNum].state;
+
 	_running_flag = 0;	// RESET flag to inform bsp we are up and running
 
 	while (smp.processorList[processorNum].state == WAITING) {
 		// do some NOP or something
 	}
 
-	//renderScreenPart(0, 0, 100, 100);
 
-	//size_t size = screen.bufSize / smp.numberOfProcessors;
 	size_t size = screen.bufSize / 4;
 
 	char * start = &screen.bBuffer[processorNum * size];
 	char * end = &screen.bBuffer[(processorNum * size) + size];
 
-//	renderScreenBufferPart(&screen.bBuffer[processorNum * size], &screen.bBuffer[size], 200);
 	char blue[] = {255, 0, 0, 0};
 	char green[] = {0, 255, 0, 0};
 	char red[] = {0, 0, 255, 0};
@@ -74,8 +71,9 @@ void _main_ap(int processorNum) {
 
 	renderScreenBufferPart(start, end, color);
 
-	//char red[] = RED;
-	while (smp.processorList[processorNum].state == BUSY) {
-		smp.processorList[processorNum].state = WAITING;
-	}
+	acquireLock(&smp.processorList[processorNum].lState);
+	smp.processorList[processorNum].state = WAITING;
+	releaseLock(&smp.processorList[processorNum].lState);
+
+	for (;;); // or halt
 }

@@ -1,20 +1,43 @@
-[BITS 32]
-
-global acquireLock
-global releaseLock
-
+global _acquireLock
+global _releaseLock
 
 SECTION .text
 
-_spin_wait:
-    test dword [esp], 1      ;Is the lock free?
-    jnz _spin_wait           ;no, wait
+[BITS 32]
 
-acquireLock:
-    lock bts [esp], 0        ;Attempt to acquire the lock (in case lock is uncontended)
-    jc _spin_wait            ;Spin if locked ( organize code such that conditional jumps are typically not taken )
-    ret                      ;Lock obtained
+_acquireLock:
+cli
+	push ebx
+	push ecx
+	mov ebx, [esp + 4]					; ebx holds lock var addr on stack
+	xor ecx, ecx
+	inc ecx
+__spin_wait:
+	xor eax, eax
+	lock cmpxchg [ebx], ecx				; reason to use assembly
+	jnz __spin_wait
+	pop ecx
+	pop ebx
+sti
+	ret
 
-releaseLock:
-    mov dword [esp], 0
-    ret
+_releaseLock:
+cli
+	push ebx
+	push ecx
+	mov ebx, [esp + 4]					; ebx holds lock var addr on stack
+	xor ecx, ecx
+__spin_wait2:
+	xor eax, eax
+	inc eax
+	lock cmpxchg [ebx], ecx				; reason to use assembly
+	jnz __spin_wait2
+	pop ecx
+	pop ebx
+sti
+	ret
+
+
+
+
+

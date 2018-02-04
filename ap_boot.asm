@@ -49,6 +49,7 @@ protected_start: use32
 	mov esp, [_ap_stack]			; set stack
 	;mov eax, 1
 	;push byte 1
+	;mov ebp, dword [_running_flag]
 	mov eax, dword [_running_flag]
 	mov [esp], eax
 	sub esp, 4
