@@ -34,8 +34,9 @@ void _main_ap(int processorNum) {
 	idt_install(smp.processorList[processorNum].idt, &smp.processorList[processorNum].idtp);
 	isrs_install(smp.processorList[processorNum].idt);
 
-	//apic_irq_install(smp.processorList[processorNum].idt);	// so we can receive
-	//apic_write(SPURIOUS_INTERRUPT_VECTOR_REGISTER, 0x1FF);
+	apic_irq_install(smp.processorList[processorNum].idt);	// so we can receive
+	apic_write(SPURIOUS_INTERRUPT_VECTOR_REGISTER, 0x1FF);
+//	apic_write(SPURIOUS_INTERRUPT_VECTOR_REGISTER, 0xFF);
 
 	smp.processorList[processorNum].state = WAITING;
 
@@ -70,6 +71,8 @@ void _main_ap(int processorNum) {
 	}
 
 	renderScreenBufferPart(start, end, color);
+
+
 
 	acquireLock(&smp.processorList[processorNum].lState);
 	smp.processorList[processorNum].state = WAITING;

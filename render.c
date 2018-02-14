@@ -3,10 +3,10 @@
 
 screen_t screen;
 
-
+bool doneDrawingProcList[MAX_CPU];
 
 void init_screen() {
-
+	memset(doneDrawingProcList, FALSE, sizeof(bool) * MAX_CPU);
 }
 
 void renderScreenPart(int xStart, int yStart, int width, int height) {

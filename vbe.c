@@ -14,6 +14,9 @@ vbeModeInfo * inf = (vbeModeInfo *) VBE_MODE_INFO_ADDR;
 extern smp_t smp;
 //extern int _ap_stack;
 
+
+
+
 bool isModeInList(unsigned short modeNum, vbeControllerInfo * ctrl) {
 	unsigned short * mode = (unsigned short*) segToFlatAddr(
 			ctrl->VideoModesPtr);
@@ -260,19 +263,29 @@ bool tryMode(unsigned short modeNum) {
 bool init_vbe() {
 
 	//return showVesaInfo();
-return TRUE;
+	return TRUE;
 }
 
 void apic_irq48_handler(struct regs *r) {
-	//int val = 0x2f4b2f4f;
-	//memcpy((char*)0xb8000, (char *)&val, 4);
-	//register int id asm("ebp");
-//cls();
-	//smp.processorList[1].state = 1;
-	//smp.processorList[id].irq_count++;
+
+	register int id asm("ebp");
+
+	smp.processorList[id].state = BUSY;
+
 
 
 }
+
+void apic_irq49_handler(struct regs *r) {
+
+	//register int id asm("ebp");
+
+	//smp.processorList[id].state = BUSY;
+
+
+
+}
+
 
 
 void demoVBE() {
@@ -326,7 +339,9 @@ void demoVBE() {
 
 	int i;
 	for (i = 1; i < smp.numberOfProcessors; i++) {
-		smp.processorList[i].state = BUSY;
+		//smp.processorList[i].state = BUSY;
+		apic_write(INTERRUPT_COMMAND_REGISTER_2, smp.processorList[i].ApicId << 24);
+		apic_write(INTERRUPT_COMMAND_REGISTER_1, 0x4030);
 	}
 
 

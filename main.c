@@ -10,6 +10,7 @@
 #include "isrs.h"
 #include "gdt.h"
 #include "vbe.h"
+#include "apic.h"
 
 extern smp_t smp;
 //extern void acquireLock(int lock);
@@ -51,6 +52,9 @@ void _main(/*multiboot_info_t *mbt, unsigned long magic*/) {
 	if (init_vbe() == FALSE) {
 		return;
 	}
+
+
+
 	demoVBE();
 
 	

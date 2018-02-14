@@ -8,10 +8,7 @@ enum ProcessorState {
 	WAITING = 0, BUSY = 1
 };
 
-//typedef struct {
-//	int lock __attribute__ ((aligned (32)));
-//	void * item;
-//} lock_t;
+
 
 typedef int lock_t __attribute__ ((aligned (32)));
 

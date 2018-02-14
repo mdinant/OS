@@ -33,10 +33,10 @@ extern smp_t smp;
 
 /* This array is actually an array of function pointers. We use
 *  this to handle custom IRQ handlers for a given IRQ */
-void *irq_routines[17] =
+void *irq_routines[18] =
 {
     0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 };
 
 /* This installs a custom IRQ handler for the given IRQ */
@@ -155,8 +155,6 @@ void apic_irq_handler(struct regs *r)
     {
         handler(r);
     }
-
-    cls();
 
     apic_write(EOI_REGISTER, 0x0);
 }

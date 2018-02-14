@@ -346,6 +346,7 @@ global irq13
 global irq14
 global irq15
 global irq48
+global irq49
 global irq255
 
 ; 32: IRQ0
@@ -482,19 +483,15 @@ spurious:
 
 ; 48: IRQ48 APIC
 irq48:
-    ;push eax
-    ;mov eax, cls
-    ;call eax
-    ;pop eax
-;hlt
-;	push ecx
-;	mov ecx, 0xFEE00000
-;	mov [ecx], dword 0x000000B0 >> 4
-;	pop ecx
-;	iret
 	cli
     push byte 0
     push byte 48
+    jmp apic_irq_common_stub
+
+irq49:
+	cli
+    push byte 0
+    push byte 49
     jmp apic_irq_common_stub
 
 ; apic spurious, ignore

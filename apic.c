@@ -6,9 +6,10 @@
 
 extern smp_t smp;
 extern void irq48();	//asm stuff first
+extern void irq49();
 extern void irq255();
 extern void apic_irq48_handler(struct regs *r);
-
+extern void apic_irq49_handler(struct regs *r);
 
 unsigned int apic_read(unsigned int reg) {
 
@@ -43,7 +44,9 @@ void apic_irq_install(struct idt_entry * idt) {
      * APIC
      */
     idt_set_gate(idt, 48, (unsigned)irq48, 0x08, 0x8E);
+    idt_set_gate(idt, 49, (unsigned)irq49, 0x08, 0x8E);
     idt_set_gate(idt, 255, (unsigned)irq255, 0x08, 0x8E);
 
 	irq_install_handler(16, apic_irq48_handler);
+	irq_install_handler(17, apic_irq49_handler);
 }
