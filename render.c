@@ -3,32 +3,15 @@
 
 screen_t screen;
 
-bool doneDrawingProcList[MAX_CPU];
+//bool renderScreenFinishedList[MAX_CPU];
 
-void init_screen() {
-	memset(doneDrawingProcList, FALSE, sizeof(bool) * MAX_CPU);
-}
+
+
+//void init_screen() {
+//	memset(renderScreenFinishedList, FALSE, sizeof(bool) * MAX_CPU);
+//}
 
 void renderScreenPart(int xStart, int yStart, int width, int height) {
-//	unsigned char color[] = { 50, 100, 200, 255 };
-//
-//	int c;
-//
-//	char * start = &screen.bBuffer[((yStart * screen.width) + xStart) * screen.bbp];
-//
-//	char * ptr;
-//
-//	int x;
-//	int y;
-//	for (y = yStart; y < height; y++) {
-//		for (x = xStart; x < width; x++) {
-//			ptr = &start[((y * screen.width) + x) * screen.bbp];
-//			memcpy(ptr, color, screen.bbp);
-//		}
-//	}
-
-
-	memset(screen.bBuffer, 200, screen.bufSize);
 
 }
 

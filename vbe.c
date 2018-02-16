@@ -15,6 +15,7 @@ extern smp_t smp;
 //extern int _ap_stack;
 
 
+int numberOfProcessesorsDoneDrawing = 0;	// global, because changed during interrupt handling
 
 
 bool isModeInList(unsigned short modeNum, vbeControllerInfo * ctrl) {
@@ -272,18 +273,10 @@ void apic_irq48_handler(struct regs *r) {
 
 	smp.processorList[id].state = BUSY;
 
-
-
 }
 
 void apic_irq49_handler(struct regs *r) {
-
-	//register int id asm("ebp");
-
-	//smp.processorList[id].state = BUSY;
-
-
-
+	numberOfProcessesorsDoneDrawing++;
 }
 
 
@@ -335,44 +328,44 @@ void demoVBE() {
 		break;
 	}
 
-	renderScreenBufferPart(start, end, color);
-
-	int i;
-	for (i = 1; i < smp.numberOfProcessors; i++) {
-		//smp.processorList[i].state = BUSY;
-		apic_write(INTERRUPT_COMMAND_REGISTER_2, smp.processorList[i].ApicId << 24);
-		apic_write(INTERRUPT_COMMAND_REGISTER_1, 0x4030);
-	}
 
 
 
-	bool done = FALSE;
+	while (TRUE) {
 
 
-	while (done == FALSE) {
-		done = TRUE;
+		int i;
 		for (i = 1; i < smp.numberOfProcessors; i++) {
-			acquireLock(&smp.processorList[i].lState);
-			if (smp.processorList[i].state == BUSY) {
-				done = FALSE;
-				releaseLock(&smp.processorList[i].lState);
-				break;
-			}
-			releaseLock(&smp.processorList[i].lState);
+			//smp.processorList[i].state = BUSY;
+			apic_write(INTERRUPT_COMMAND_REGISTER_2, smp.processorList[i].ApicId << 24);
+			apic_write(INTERRUPT_COMMAND_REGISTER_1, 0x4030);
 		}
+
+		renderScreenBufferPart(start, end, color);
+
+
+		bool done = FALSE;
+		while (done == FALSE) {
+//			done = TRUE;
+//			for (i = 1; i < smp.numberOfProcessors; i++) {
+//				acquireLock(&smp.processorList[i].lState);
+//				if (smp.processorList[i].state == BUSY) {
+//					done = FALSE;
+//					releaseLock(&smp.processorList[i].lState);
+//					break;
+//				}
+//				releaseLock(&smp.processorList[i].lState);
+//			}
+
+			done = numberOfProcessesorsDoneDrawing == (smp.numberOfProcessors -1);
+
+		}
+		numberOfProcessesorsDoneDrawing = 0;
+
+		// swap
+		char * ptr = (char *) inf->PhysBasePtr;
+		memcpy(ptr, screen.bBuffer, screen.bufSize);
 	}
-
-	char * ptr = (char *) inf->PhysBasePtr;
-	memcpy(ptr, screen.bBuffer, screen.bufSize);
-
-
-	// do a color
-
-
-
-	//memcpy_SSE2(ptr, bBuffer, bufSize);
-
-	//memset(ptr, 128, 2000);
 
 	anykey();
 

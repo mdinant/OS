@@ -42,41 +42,48 @@ void _main_ap(int processorNum) {
 
 	_running_flag = 0;	// RESET flag to inform bsp we are up and running
 
-	while (smp.processorList[processorNum].state == WAITING) {
-		// do some NOP or something
+
+
+	while (TRUE) {
+		while (smp.processorList[processorNum].state == WAITING) {
+			// wait for interrupt
+		}
+
+		size_t size = screen.bufSize / 4;
+
+		char * start = &screen.bBuffer[processorNum * size];
+		char * end = &screen.bBuffer[(processorNum * size) + size];
+
+		char blue[] = {255, 0, 0, 0};
+		char green[] = {0, 255, 0, 0};
+		char red[] = {0, 0, 255, 0};
+		char * color;
+		switch (processorNum) {
+		case 1:
+			color = red;
+			break;
+		case 2:
+			color = blue;
+			break;
+		case 3:
+			color = green;
+			break;
+		default:
+			break;
+		}
+
+
+		renderScreenBufferPart(start, end, color);
+
+
+		apic_write(INTERRUPT_COMMAND_REGISTER_2, smp.processorList[0].ApicId << 24);
+		apic_write(INTERRUPT_COMMAND_REGISTER_1, 0x4031);
+
+//		acquireLock(&smp.processorList[processorNum].lState);
+//		smp.processorList[processorNum].state = WAITING;
+//		releaseLock(&smp.processorList[processorNum].lState);
+
 	}
-
-
-	size_t size = screen.bufSize / 4;
-
-	char * start = &screen.bBuffer[processorNum * size];
-	char * end = &screen.bBuffer[(processorNum * size) + size];
-
-	char blue[] = {255, 0, 0, 0};
-	char green[] = {0, 255, 0, 0};
-	char red[] = {0, 0, 255, 0};
-	char * color;
-	switch (processorNum) {
-	case 1:
-		color = red;
-		break;
-	case 2:
-		color = blue;
-		break;
-	case 3:
-		color = green;
-		break;
-	default:
-		break;
-	}
-
-	renderScreenBufferPart(start, end, color);
-
-
-
-	acquireLock(&smp.processorList[processorNum].lState);
-	smp.processorList[processorNum].state = WAITING;
-	releaseLock(&smp.processorList[processorNum].lState);
 
 	for (;;); // or halt
 }
